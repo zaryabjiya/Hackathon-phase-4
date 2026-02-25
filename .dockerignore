@@ -1,0 +1,44 @@
+# Root level ignores for docker-compose builds
+# These files won't be sent to Docker daemon
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Documentation
+*.md
+!README.md
+
+# Environment
+.env
+.env.example
+.env.local
+
+# Docker
+docker-compose.yml
+docker/
+
+# Scripts
+*.bat
+*.sh
+scripts/
+
+# Kubernetes
+k8s/
+
+# Qwen/SpecKit
+.qwen/
+.specify/
+history/
+specs/
+
+# Misc
+.DS_Store
+Thumbs.db
+*.log

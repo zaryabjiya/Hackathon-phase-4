@@ -1,0 +1,355 @@
+# API Contract: Multi-User Todo Application
+
+## Overview
+This document defines the API contracts for the multi-user Todo application, specifying endpoints, request/response formats, and authentication requirements.
+
+## Base URL
+```
+https://api.todoapp.com/v1  # Production
+http://localhost:8000       # Development
+```
+
+## Authentication
+All endpoints require authentication via JWT token in the Authorization header:
+```
+Authorization: Bearer <jwt_token>
+```
+
+## Common Response Format
+
+### Success Response
+```json
+{
+  "success": true,
+  "data": { /* response data */ },
+  "message": "Optional success message"
+}
+```
+
+### Error Response
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human-readable error message",
+    "details": { /* optional error details */ }
+  }
+}
+```
+
+## Endpoints
+
+### Authentication
+
+#### POST /auth/register
+Register a new user account.
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123",
+  "first_name": "John",
+  "last_name": "Doe"
+}
+```
+
+**Response (201 Created)**:
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "uuid-string",
+      "email": "user@example.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "created_at": "2023-01-01T00:00:00Z"
+    },
+    "token": "jwt-token-string"
+  },
+  "message": "Registration successful"
+}
+```
+
+**Validation Errors (422)**:
+- Email format invalid
+- Password too weak
+- Email already exists
+
+#### POST /auth/login
+Authenticate a user and return a JWT token.
+
+**Request Body**:
+```json
+{
+  "email": "user@example.com",
+  "password": "securePassword123"
+}
+```
+
+**Response (200 OK)**:
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": "uuid-string",
+      "email": "user@example.com",
+      "first_name": "John",
+      "last_name": "Doe",
+      "created_at": "2023-01-01T00:00:00Z"
+    },
+    "token": "jwt-token-string"
+  },
+  "message": "Login successful"
+}
+```
+
+**Authentication Errors (401)**:
+- Invalid credentials
+- Account inactive
+
+#### POST /auth/logout
+Invalidate the user's session.
+
+**Headers**:
+```
+Authorization: Bearer <valid_jwt_token>
+```
+
+**Response (200 OK)**:
+```json
+{
+  "success": true,
+  "message": "Logged out successfully"
+}
+```
+
+### Tasks
+
+#### GET /users/{user_id}/tasks
+Retrieve all tasks for a specific user.
+
+**Headers**:
+```
+Authorization: Bearer <valid_jwt_token>
+```
+
+**Parameters**:
+- `page` (integer, optional): Page number for pagination (default: 1)
+- `limit` (integer, optional): Number of tasks per page (default: 10, max: 50)
+- `status` (string, optional): Filter by status (all, pending, completed)
+- `sort` (string, optional): Sort by (created_at, due_date, priority)
+
+**Response (200 OK)**:
+```json
+{
+  "success": true,
+  "data": {
+    "tasks": [
+      {
+        "id": "uuid-string",
+        "title": "Sample Task",
+        "description": "Task description",
+        "completed": false,
+        "completed_at": null,
+        "due_date": "2023-12-31T23:59:59Z",
+        "priority": "medium",
+        "user_id": "user-uuid-string",
+        "created_at": "2023-01-01T00:00:00Z",
+        "updated_at": "2023-01-01T00:00:00Z"
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 10,
+      "total": 25,
+      "total_pages": 3
+    }
+  }
+}
+```
+
+#### POST /users/{user_id}/tasks
+Create a new task for the user.
+
+**Headers**:
+```
+Authorization: Bearer <valid_jwt_token>
+```
+
+**Request Body**:
+```json
+{
+  "title": "New Task",
+  "description": "Task description",
+  "due_date": "2023-12-31T23:59:59Z",
+  "priority": "high"
+}
+```
+
+**Response (201 Created)**:
+```json
+{
+  "success": true,
+  "data": {
+    "task": {
+      "id": "uuid-string",
+      "title": "New Task",
+      "description": "Task description",
+      "completed": false,
+      "completed_at": null,
+      "due_date": "2023-12-31T23:59:59Z",
+      "priority": "high",
+      "user_id": "user-uuid-string",
+      "created_at": "2023-01-01T00:00:00Z",
+      "updated_at": "2023-01-01T00:00:00Z"
+    }
+  },
+  "message": "Task created successfully"
+}
+```
+
+**Validation Errors (422)**:
+- Title is required and must be 1-200 characters
+- Description must be ≤1000 characters if provided
+- Due date must be in the future if provided
+- Priority must be one of: low, medium, high
+
+#### GET /users/{user_id}/tasks/{task_id}
+Retrieve a specific task for the user.
+
+**Headers**:
+```
+Authorization: Bearer <valid_jwt_token>
+```
+
+**Response (200 OK)**:
+```json
+{
+  "success": true,
+  "data": {
+    "task": {
+      "id": "uuid-string",
+      "title": "Sample Task",
+      "description": "Task description",
+      "completed": false,
+      "completed_at": null,
+      "due_date": "2023-12-31T23:59:59Z",
+      "priority": "medium",
+      "user_id": "user-uuid-string",
+      "created_at": "2023-01-01T00:00:00Z",
+      "updated_at": "2023-01-01T00:00:00Z"
+    }
+  }
+}
+```
+
+**Not Found (404)**:
+- Task does not exist or does not belong to the user
+
+#### PUT /users/{user_id}/tasks/{task_id}
+Update an existing task for the user.
+
+**Headers**:
+```
+Authorization: Bearer <valid_jwt_token>
+```
+
+**Request Body**:
+```json
+{
+  "title": "Updated Task Title",
+  "description": "Updated description",
+  "due_date": "2023-12-31T23:59:59Z",
+  "priority": "high"
+}
+```
+
+**Response (200 OK)**:
+```json
+{
+  "success": true,
+  "data": {
+    "task": {
+      "id": "uuid-string",
+      "title": "Updated Task Title",
+      "description": "Updated description",
+      "completed": false,
+      "completed_at": null,
+      "due_date": "2023-12-31T23:59:59Z",
+      "priority": "high",
+      "user_id": "user-uuid-string",
+      "created_at": "2023-01-01T00:00:00Z",
+      "updated_at": "2023-01-01T00:00:01Z"
+    }
+  },
+  "message": "Task updated successfully"
+}
+```
+
+#### PATCH /users/{user_id}/tasks/{task_id}/complete
+Mark a task as complete or incomplete.
+
+**Headers**:
+```
+Authorization: Bearer <valid_jwt_token>
+```
+
+**Request Body**:
+```json
+{
+  "completed": true
+}
+```
+
+**Response (200 OK)**:
+```json
+{
+  "success": true,
+  "data": {
+    "task": {
+      "id": "uuid-string",
+      "title": "Sample Task",
+      "description": "Task description",
+      "completed": true,
+      "completed_at": "2023-01-01T00:00:00Z",
+      "due_date": "2023-12-31T23:59:59Z",
+      "priority": "medium",
+      "user_id": "user-uuid-string",
+      "created_at": "2023-01-01T00:00:00Z",
+      "updated_at": "2023-01-01T00:00:00Z"
+    }
+  },
+  "message": "Task completion status updated"
+}
+```
+
+#### DELETE /users/{user_id}/tasks/{task_id}
+Delete a specific task for the user.
+
+**Headers**:
+```
+Authorization: Bearer <valid_jwt_token>
+```
+
+**Response (200 OK)**:
+```json
+{
+  "success": true,
+  "message": "Task deleted successfully"
+}
+```
+
+## Error Codes
+
+| Code | HTTP Status | Description |
+|------|-------------|-------------|
+| AUTH_001 | 401 | Invalid or expired token |
+| AUTH_002 | 401 | Insufficient permissions |
+| AUTH_003 | 400 | Invalid credentials |
+| VALIDATION_001 | 422 | Validation error |
+| RESOURCE_001 | 404 | Resource not found |
+| SERVER_001 | 500 | Internal server error |

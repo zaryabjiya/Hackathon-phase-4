@@ -1,0 +1,134 @@
+openapi: 3.0.3
+info:
+  title: MCP Tools for Todo Chatbot
+  version: 1.0.0
+  description: Tool schemas for Cohere-powered todo management
+
+paths: {}
+
+components:
+  schemas:
+    # Tool: add_task
+    AddTaskInput:
+      type: object
+      required:
+        - user_id
+        - title
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          description: Authenticated user ID from JWT
+        title:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Task title
+        description:
+          type: string
+          maxLength: 1000
+          description: Optional task description
+    
+    AddTaskResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        task_id:
+          type: integer
+        message:
+          type: string
+    
+    # Tool: list_tasks
+    ListTasksInput:
+      type: object
+      required:
+        - user_id
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum:
+            - all
+            - pending
+            - completed
+          default: all
+    
+    ListTasksResponse:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+        count:
+          type: integer
+    
+    # Tool: complete_task
+    CompleteTaskInput:
+      type: object
+      required:
+        - user_id
+        - task_id
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        task_id:
+          type: integer
+    
+    # Tool: delete_task
+    DeleteTaskInput:
+      type: object
+      required:
+        - user_id
+        - task_id
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        task_id:
+          type: integer
+    
+    # Tool: update_task
+    UpdateTaskInput:
+      type: object
+      required:
+        - user_id
+        - task_id
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        task_id:
+          type: integer
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+          maxLength: 1000
+    
+    # Shared: Task entity
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        completed:
+          type: boolean
+        due_date:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time

@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.env
+.venv/
+
+# Node.js / Next.js
+node_modules/
+.next/
+.env.local
+.DS_Store
+
+# Other
+*.log
+dist/
+build/
+
+# Phase IV - Kubernetes & Docker
+docker/
+k8s/
+scripts/
+*.secret.yaml
